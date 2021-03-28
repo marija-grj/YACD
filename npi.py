@@ -10,11 +10,6 @@ import pandas as pd
 data = pd.read_csv(r"data\OxCGRT_latest.csv",dtype={'CountryCode':'string'})
 data.loc[:,'Date'] = pd.to_datetime(data.Date, format='%Y-%m-%d')
 
-# population = pd.read_csv(r"C:\Users\37125\Documents\GitHub\DV_project_1\API_SP.POP.TOTL_DS2_en_csv_v2_2106202\API_SP.POP.TOTL_DS2_en_csv_v2_2106202.csv",skiprows=4)
-# population = population[["Country Code","2019"]]
-# population = pd.merge(population, data[['CountryCode','CountryName']].drop_duplicates(), left_on='Country Code', right_on='CountryCode')
-# population = population[["CountryName","2019"]].set_index("CountryName")
-# population.index.name = None
 
 app = dash.Dash(
     __name__, 
