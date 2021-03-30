@@ -77,14 +77,27 @@ page_dynamics = html.Div([
             style={'textAlign':'center'}),
     html.Hr(),
     dbc.RadioItems(
-        id="radio-data-2",
+        id="radio-data-row1",
         options=[
-            {'label': 'Daily cases', 'value': 'DailyCases'},
-            {'label': '7-day average', 'value': 'Average7'},
-            {'label': 'Cumulative cases per 100K', 'value': 'ConfirmedCases_100K'},
-            {'label': '14-day average per 100K', 'value': 'Average14_100K'},
+            {'label': 'Cases', 'value': 'Cases'},
+            {'label': 'Deaths', 'value': 'Deaths'},
+            {'label': 'Tests', 'value': 'Tests'},
+            {'label': 'Vaccinations', 'value': 'Vaccine'},
         ],
-        value='Average7',
+        value='Cases',
+        labelClassName="mr-4",
+        className="text-center lead",
+        inline=True,
+        inputClassName="mr-2"
+    ),
+        dbc.RadioItems(
+        id="radio-data-row2",
+        options=[
+            {'label': 'Cumulative', 'value': 'Cumulative'},
+            {'label': 'Daily', 'value': 'Daily'},
+            {'label': '14-day cumulative per 100K', 'value': 'BiweeklyNorm'},
+        ],
+        value='Daily',
         labelClassName="mr-4",
         className="text-center lead",
         inline=True,
@@ -99,9 +112,13 @@ page_dynamics = html.Div([
 @app.callback(
     Output('graph-dynamics', 'figure'),
     Input('dropdown-country-1', 'value'),
-    Input('radio-data-2', 'value')
+    Input('radio-data-row1', 'value'),
+    Input('radio-data-row2', 'value')
 )
-def update_graph(country, column):
+def update_graph(country, measure, type):
+    column = type+measure
+    if column.isin(["CumulativeCases","CumulativeDeaths"]):
+        column = "Confirmed"+measure
     dataS = data[data.CountryName == country]
     x = data[(data.CountryName==country)]["Date"]
     y = data[(data.CountryName==country)][column]
