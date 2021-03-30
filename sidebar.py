@@ -6,12 +6,15 @@ import plotly.express as px
 import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
 import pandas as pd
+import datetime
 
 df = pd.read_csv('https://raw.githubusercontent.com/Coding-with-Adam/Dash-by-Plotly/master/Bootstrap/Side-Bar/iranian_students.csv')
 
 data = pd.read_csv("https://raw.githubusercontent.com/marija-grj/YACD/main/data/OxCGRT_latest.csv",dtype={'CountryCode':'string'})
 data.loc[:,'Date'] = pd.to_datetime(data.Date, format='%Y-%m-%d')
-
+minDate = data.Date.min()
+# Transform every unique date to a number
+numDate = [x for x in range(len(data.Date.unique()))]
 #  -------------------------------------------------------------------------------------
 
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.FLATLY],
@@ -90,7 +93,7 @@ page_dynamics = html.Div([
         inline=True,
         inputClassName="mr-2"
     ),
-        dbc.RadioItems(
+    dbc.RadioItems(
         id="radio-data-row2",
         options=[
             {'label': 'Cumulative', 'value': 'Cumulative'},
@@ -103,31 +106,41 @@ page_dynamics = html.Div([
         inline=True,
         inputClassName="mr-2"
     ),
-    dcc.Graph(id='graph-dynamics', figure={})   
-    # dcc.Graph(id='bargraph',
-    #             figure=px.bar(df, barmode='group', x='Years',
-    #             y=['Girls Kindergarten', 'Boys Kindergarten']))
+    dcc.Graph(id='graph-dynamics', figure={}),
+    dcc.RangeSlider(
+        id='date-slider-1',
+        min=numDate[0],
+        max=numDate[-1],
+        value=[numDate[0], numDate[-1]],
+        step=1,
+        allowCross=False
+    )   
 ])
 
 @app.callback(
     Output('graph-dynamics', 'figure'),
     Input('dropdown-country-1', 'value'),
     Input('radio-data-row1', 'value'),
-    Input('radio-data-row2', 'value')
+    Input('radio-data-row2', 'value'),
+    Input('date-slider-1', 'value')
 )
-def update_graph(country, measure, type):
+def update_graph(country, measure, type, dateNum):
     column = type+measure
-    if column.isin(["CumulativeCases","CumulativeDeaths"]):
+    if (column=="CumulativeCases") | (column=="CumulativeDeaths"):
         column = "Confirmed"+measure
     dataS = data[data.CountryName == country]
-    x = data[(data.CountryName==country)]["Date"]
-    y = data[(data.CountryName==country)][column]
+    x = data[(data.CountryName==country) &
+             (data.Date >= minDate+datetime.timedelta(days=dateNum[0])) &
+             (data.Date <= minDate+datetime.timedelta(days=dateNum[1]))
+             ]["Date"]
+    y = data[(data.CountryName==country) &
+             (data.Date >= minDate+datetime.timedelta(days=dateNum[0])) &
+             (data.Date <= minDate+datetime.timedelta(days=dateNum[1]))
+            ][column]
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=x,y=y))
+    fig.add_trace(go.Scatter(x=x,y=y,marker_color='#0056b3'))
     fig.update_layout(
-        # bargap=0,
-        # legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right", x=1),
-        template="simple_white"
+    template="simple_white"
     )
     return fig
 
@@ -158,7 +171,9 @@ page_interventions = html.Div([
         options=[
             {'label': 'Gatherings', 'value': 'C4_Restrictions on gatherings'},
             {'label': 'School closing', 'value': 'C1_School closing'},
-            {'label': 'Workplace closing', 'value': 'C2_Workplace closing'}
+            {'label': 'Workplace closing', 'value': 'C2_Workplace closing'},
+            {'label': 'Internal movement', 'value': 'C7_Restrictions on internal movement'},
+            {'label': 'International travel', 'value': 'C8_International travel controls'}
         ],
         value='C4_Restrictions on gatherings',
         labelClassName="mr-4",
@@ -166,28 +181,44 @@ page_interventions = html.Div([
         inline=True,
         inputClassName="mr-2"
     ),
-    dcc.Graph(id='graph-npi', figure={})    
+    dcc.Graph(id='graph-npi', figure={}),
+        dcc.RangeSlider(
+        id='date-slider-2',
+        min=numDate[0],
+        max=numDate[-1],
+        value=[numDate[0], numDate[-1]],
+        step=1,
+        allowCross=False
+    )      
 ])
 
 dict_npi = {"C1_School closing":["No restrictions","Recommend closing","Require closing some levels","Require closing all levels"],
             "C2_Workplace closing":["No restrictions","Recommend closing","Require closing some sectors","Require closing all non-essential"],
-            "C4_Restrictions on gatherings":["No restrictions","1001 or more people","101-1000 people","11-100 people","10 people or less"]
-      }
+            "C4_Restrictions on gatherings":["No restrictions","1001 or more people","101-1000 people","11-100 people","10 people or less"],
+            "C7_Restrictions on internal movement":["No restrictions","Recommendations","Restrictions"],
+            "C8_International travel controls":["No restrictions","Screening arrivals","Quarantine arrivals","Ban arrivals from some regions","Total border closure"]
+            } 
+colors_npi = ['#8b8b8b','#beddf4','#7cbce9','#3b9ade','#1f77b4']
+colors_npi2 = ['#8b8b8b','#99caff','#4da3ff','#007bff','#0056b3']
 
 @app.callback(
     Output('graph-npi', 'figure'),
     Input('dropdown-country-1', 'value'),
     Input('radio-data-1', 'value'),
-    Input('radio-npi-1','value')
+    Input('radio-npi-1','value'),
+    Input('date-slider-2', 'value')
 )
-def update_graph(country, column, npi):
-    dataS = data[data.CountryName == country]
-    x = data[(data.CountryName==country)]["Date"]
-    y = data[(data.CountryName==country)][column]
-    c = data[(data.CountryName==country)][npi]
+def update_graph(country, column, npi, dateNum):
+    dataS = data[(data.CountryName==country) &
+             (data.Date >= minDate+datetime.timedelta(days=dateNum[0])) &
+             (data.Date <= minDate+datetime.timedelta(days=dateNum[1]))
+             ]
+    x = dataS["Date"]
+    y = dataS[column]
+    c = dataS[npi]
     fig = go.Figure()
     for i in range(len(dict_npi[npi])):
-        fig.add_trace(go.Bar(x=x[c==i], y=y[c==i], name=dict_npi[npi][i]))
+        fig.add_trace(go.Bar(x=x[c==i], y=y[c==i], name=dict_npi[npi][i], marker_color=colors_npi2[i]))
     fig.update_layout(
         bargap=0,
         legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right", x=1),
