@@ -7,7 +7,7 @@ import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
 import pandas as pd
 
-data = pd.read_csv(r"data\OxCGRT_latest.csv",dtype={'CountryCode':'string'})
+data = pd.read_csv("https://raw.githubusercontent.com/marija-grj/YACD/main/data/OxCGRT_latest.csv",dtype={'CountryCode':'string'})
 data.loc[:,'Date'] = pd.to_datetime(data.Date, format='%Y-%m-%d')
 
 
