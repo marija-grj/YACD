@@ -19,6 +19,8 @@ numDate = [x for x in range(len(data.Date.unique()))] # Transform every unique d
 app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUMEN],
                 suppress_callback_exceptions = True)
 
+server = app.server
+
 #  -------------------------------------------------------------------------------------
 
 # styling the sidebar
@@ -306,4 +308,4 @@ def render_page_content(pathname):
 #  -------------------------------------------------------------------------------------
 
 if __name__=='__main__':
-    app.run_server(debug=True, port=3000)
+    app.run_server(debug=True)
