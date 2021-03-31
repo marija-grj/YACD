@@ -8,16 +8,15 @@ import dash_bootstrap_components as dbc
 import pandas as pd
 import datetime
 
-df = pd.read_csv('https://raw.githubusercontent.com/Coding-with-Adam/Dash-by-Plotly/master/Bootstrap/Side-Bar/iranian_students.csv')
-
 data = pd.read_csv("https://raw.githubusercontent.com/marija-grj/YACD/main/data/OxCGRT_latest.csv",dtype={'CountryCode':'string'})
 data.loc[:,'Date'] = pd.to_datetime(data.Date, format='%Y-%m-%d')
 minDate = data.Date.min()
-# Transform every unique date to a number
-numDate = [x for x in range(len(data.Date.unique()))]
+
+numDate = [x for x in range(len(data.Date.unique()))] # Transform every unique date to a number
+
 #  -------------------------------------------------------------------------------------
 
-app = dash.Dash(__name__, external_stylesheets=[dbc.themes.FLATLY],
+app = dash.Dash(__name__, external_stylesheets=[dbc.themes.LUMEN],
                 suppress_callback_exceptions = True)
 
 #  -------------------------------------------------------------------------------------
@@ -44,23 +43,21 @@ CONTENT_STYLE = {
 
 sidebar = html.Div(
     [
-        html.H2("Group R", className="display-4"),
+        html.H3("Yet"+"\n"+"Another Covid-19 Dashboard", className="display-8"),
         html.Hr(),
         html.P(
             "Select a country", className="lead"
         ),
         dcc.Dropdown(
             id='dropdown-country-1', multi=False, value='Latvia',
-            options=[{'label':x, 'value':x}
-                     for x in sorted(data.CountryName.unique())
-                     ]
+            options=[{'label':x, 'value':x} for x in sorted(data.CountryName.unique())]
         ),
         html.Hr(),
-        dbc.Nav(
-            [
-                dbc.NavLink("Dynamics", href="/dynamics", active="exact"),
-                dbc.NavLink("Interventions", href="/interventions", active="exact"),
-                dbc.NavLink("Global Context", href="/global-context", active="exact"),
+        dbc.Nav([
+            dbc.NavLink("Main", href="/", active="exact"),
+            dbc.NavLink("Dynamics", href="/dynamics", active="exact"),
+            dbc.NavLink("Interventions", href="/interventions", active="exact"),
+            dbc.NavLink("Global Context", href="/global-context", active="exact"),
             ],
             vertical=True,
             pills=True,
@@ -70,6 +67,17 @@ sidebar = html.Div(
 )
 
 content = html.Div(id="page-content", children=[], style=CONTENT_STYLE)
+
+#  -------------------------------------------------------------------------------------
+
+# -= Page 0 =-
+
+page_main = html.Div([
+    html.H1('The project',className="display-4",
+            style={'textAlign':'center'}),
+    html.Hr(),
+    html.P('About the project, authors and sources')
+])
 
 #  -------------------------------------------------------------------------------------
 
@@ -113,7 +121,17 @@ page_dynamics = html.Div([
         max=numDate[-1],
         value=[numDate[0], numDate[-1]],
         step=1,
-        allowCross=False
+        allowCross=False,
+        marks={
+            0:"Jan 2020",
+            60:"Mar 2020",
+            121:"May 2020",
+            182:"Jul 2020",
+            244:"Sep 2020",
+            305:"Nov 2020",
+            366:"Jan 2021",
+            425:"Mar 2021"
+        }
     )   
 ])
 
@@ -138,7 +156,7 @@ def update_graph(country, measure, type, dateNum):
              (data.Date <= minDate+datetime.timedelta(days=dateNum[1]))
             ][column]
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=x,y=y,marker_color='#0056b3'))
+    fig.add_trace(go.Scatter(x=x,y=y,marker_color='#158bba'))
     fig.update_layout(
     template="simple_white"
     )
@@ -188,7 +206,17 @@ page_interventions = html.Div([
         max=numDate[-1],
         value=[numDate[0], numDate[-1]],
         step=1,
-        allowCross=False
+        allowCross=False,
+        marks={
+            0:"Jan 2020",
+            60:"Mar 2020",
+            121:"May 2020",
+            182:"Jul 2020",
+            244:"Sep 2020",
+            305:"Nov 2020",
+            366:"Jan 2021",
+            425:"Mar 2021"
+        }
     )      
 ])
 
@@ -200,6 +228,8 @@ dict_npi = {"C1_School closing":["No restrictions","Recommend closing","Require 
             } 
 colors_npi = ['#8b8b8b','#beddf4','#7cbce9','#3b9ade','#1f77b4']
 colors_npi2 = ['#8b8b8b','#99caff','#4da3ff','#007bff','#0056b3']
+colors_npi3 = ['#8b8b8b','#75cdf0','#30b4e8','#158bba','#0f678a']
+
 
 @app.callback(
     Output('graph-npi', 'figure'),
@@ -218,7 +248,7 @@ def update_graph(country, column, npi, dateNum):
     c = dataS[npi]
     fig = go.Figure()
     for i in range(len(dict_npi[npi])):
-        fig.add_trace(go.Bar(x=x[c==i], y=y[c==i], name=dict_npi[npi][i], marker_color=colors_npi2[i]))
+        fig.add_trace(go.Bar(x=x[c==i], y=y[c==i], name=dict_npi[npi][i], marker_color=colors_npi3[i]))
     fig.update_layout(
         bargap=0,
         legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right", x=1),
@@ -248,6 +278,7 @@ app.layout = html.Div([
 app.validation_layout = html.Div([
     sidebar,
     content,
+    page_main,
     page_dynamics,
     page_interventions,
     page_context
@@ -258,7 +289,9 @@ app.validation_layout = html.Div([
     [Input("url", "pathname")]
 )
 def render_page_content(pathname):
-    if pathname == "/dynamics":
+    if pathname == "/": 
+        return page_main
+    elif pathname == "/dynamics":
         return page_dynamics
     elif pathname == "/interventions":
         return page_interventions
@@ -274,4 +307,3 @@ def render_page_content(pathname):
 
 if __name__=='__main__':
     app.run_server(debug=True, port=3000)
-    # app.run_server(debug=False,dev_tools_ui=False,dev_tools_props_check=False,port=3000)
