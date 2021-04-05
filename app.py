@@ -10,8 +10,11 @@ import datetime
 
 data = pd.read_csv("https://raw.githubusercontent.com/marija-grj/YACD/main/data/OxCGRT_latest.csv",dtype={'CountryCode':'string'})
 data.loc[:,'Date'] = pd.to_datetime(data.Date, format='%Y-%m-%d')
-minDate = data.Date.min()
 
+summary = pd.read_csv("https://raw.githubusercontent.com/marija-grj/YACD/main/data/summary.csv")
+summary.loc[:,'Date'] = pd.to_datetime(summary.Date, format='%Y-%m-%d')
+
+minDate = data.Date.min()
 numDate = [x for x in range(len(data.Date.unique()))] # Transform every unique date to a number
 
 #  -------------------------------------------------------------------------------------
@@ -51,7 +54,7 @@ sidebar = html.Div(
             "Select a country", className="lead"
         ),
         dcc.Dropdown(
-            id='dropdown-country-1', multi=False, value='Latvia',
+            id='dropdown-country-1', multi=False, value='Portugal',
             options=[{'label':x, 'value':x} for x in sorted(data.CountryName.unique())]
         ),
         html.Hr(),
@@ -203,7 +206,7 @@ page_interventions = html.Div([
         inputClassName="mr-2"
     ),
     dcc.Graph(id='graph-npi', figure={}),
-        dcc.RangeSlider(
+    dcc.RangeSlider(
         id='date-slider-2',
         min=numDate[0],
         max=numDate[-1],
@@ -254,7 +257,7 @@ def update_graph(country, column, npi, dateNum):
         fig.add_trace(go.Bar(x=x[c==i], y=y[c==i], name=dict_npi[npi][i], marker_color=colors_npi3[i]))
     fig.update_layout(
         bargap=0,
-        legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right", x=1),
+        legend=dict(orientation="h", yanchor="bottom", y=1.02,xanchor="right", x=1),
         template="simple_white"
     )
     return fig
@@ -267,7 +270,7 @@ page_stringency = html.Div([
     html.H1('Impact of Stringency',className="display-4",
             style={'textAlign':'center'}),
     html.Hr(),
-    dcc.Graph(id='graph-stringency', figure={})
+    dbc.Spinner(dcc.Graph(id='graph-stringency', figure={}))
 ])
 
 @app.callback(
@@ -275,29 +278,26 @@ page_stringency = html.Div([
     Input('dropdown-country-1', 'value')
 )
 def update_graph(country):
-    # dataS = data[(data.CountryName==country)]
     dataS = data
     first_day = dataS[dataS.Average7 > 0].Date.min()
     dataS = dataS[dataS.Date>=first_day]
-    # x = dataS["Date"]
-    # y = dataS["StringencyIndexForDisplay"]
-    #c = dataS[npi]
+    dataS.loc[:,"Date"] = dataS["Date"].apply(lambda x: x.strftime("%Y-%m-%d"))
+    
     fig = px.scatter(dataS, x="StringencyIndexForDisplay", y="Average7", 
-               animation_frame=dataS["Date"].apply(lambda x: x.strftime("%Y-%m-%d")), animation_group="CountryName",
-               hover_name="CountryName",
-               # # size="pop", 
-               color="Continent_Name",
-                log_y=True, #size_max=55, 
-                range_x=[0,100], range_y=[0.01,dataS.Average7.max()]
+                animation_frame="Date", animation_group="CountryName",
+                hover_name="CountryName",
+                color="Continent_Name",
+                log_y=True, size_max=20,
+                range_x=[0,100], range_y=[0.01,dataS.Average7.max()],
+                labels={"Average7":"7-day-average cases",
+                        "StringencyIndexForDisplay":"Stringency Index",
+                        "Continent_Name":"Continent"}
                 )
     fig.update_layout(
-        # bargap=0,
-        # legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right", x=1),
         template="simple_white",
         transition = {"duration": 0.01}
     )
     return fig
-
 
 #  -------------------------------------------------------------------------------------
 
@@ -307,8 +307,133 @@ page_context = html.Div([
     html.H1('Global Context',className="display-4",
             style={'textAlign':'center'}),
     html.Hr(),
-    dcc.Graph(id='graph-world', figure={})
+    html.H3(id='h3',children='Country metrics in relation to the world/continent average',style={'textAlign':'center'}),
+    html.H5('Metrics are normalized per 100 000 people of population',style={'textAlign':'center'}),
+    dbc.RadioItems(
+        id="radio-area",
+        options = [{'label': 'continent', 'value': 'continent'},
+                    {'label': 'World', 'value': 'world'}],
+        value='world',
+        labelClassName="mr-4",
+        className="text-center lead",
+        inline=True,
+        inputClassName="mr-2"
+    ),
+    dcc.Graph(id='graph-world', figure={}),
+    html.P(id='date-selection'),
+    dcc.Slider(
+        id='date-slider-3',
+        min=numDate[0],
+        max=numDate[-1],
+        value=numDate[-3],
+        step=1,
+        marks={
+            0:"Jan 2020",
+            60:"Mar 2020",
+            121:"May 2020",
+            182:"Jul 2020",
+            244:"Sep 2020",
+            305:"Nov 2020",
+            366:"Jan 2021",
+            425:"Mar 2021"
+        }
+    ) 
 ])
+
+@app.callback(
+    Output('date-selection', 'children'),
+    Input('date-slider-3', 'value')
+)
+def display_date_selection(dateNum):
+    date = (minDate+datetime.timedelta(days=dateNum)).strftime("%Y-%m-%d")
+    return date
+
+
+@app.callback(
+    Output('h3', 'children'),
+    Input('dropdown-country-1', 'value'),
+    Input('radio-area', 'value')
+)
+def update_header(country, area):
+    area_map = {'North America':'North American', 'Asia':'Asian', 'Africa':'African',
+                'Europe':'European', 'South America':'South American','Oceania':'Oceanian',
+                'world':'global'}
+    header = country + " in relation to " + area_map[area] + " average"
+    return header
+
+@app.callback(
+    Output('radio-area', 'options'),
+    Output('radio-area', 'value'),
+    Input('dropdown-country-1', 'value')
+)
+def update_options(country):
+    continent = data[data.CountryName==country].Continent_Name.max()
+    options = [{'label': continent, 'value': continent},
+               {'label': 'World', 'value': 'world'}]
+    value = 'world'
+    return options, value
+
+@app.callback(
+    Output('graph-world', 'figure'),
+    Input('dropdown-country-1', 'value'),
+    Input('radio-area', 'value'),
+    Input('date-slider-3', 'value')
+)
+def update_graph(country, area, dateNum):
+    c = ["ConfirmedCases_100K","Average14_100K","ConfirmedDeaths_100K",
+         "CumulativeTests_100K","CumulativeVaccine_100K","PeopleVaccinated_100K",
+         "StringencyIndexForDisplay", "EconomicSupportIndexForDisplay"]
+    measures = ["Daily Cases","14-day-average Cases","Daily Deaths",
+         "Total Tests","Total Vaccinations","Total People Vaccinated",
+         "Stringency Index", "Economic Support Index"]
+    c_continent = [col+"_delta_cont" for col in c]
+    c_world = [col+"_delta_world" for col in c]
+    dataW = data[(data.CountryName==country) & (data.Date==minDate+datetime.timedelta(days=dateNum))][c + c_continent + c_world]
+    if area == 'world':
+        x = dataW[c_world].transpose().reset_index(drop=True).iloc[:,0].tolist()
+        x = [round(X,2) for X in x]
+        name = "World"
+    else:
+        x = dataW[c_continent].transpose().reset_index(drop=True).iloc[:,0].tolist()
+        x = [round(X,2) for X in x]
+        name = area
+    actual_values = dataW[c].transpose().reset_index(drop=True).iloc[:,0].tolist()
+    actual_values = [round(X,2) for X in actual_values]
+    average_values = summary[(summary.Date==minDate+datetime.timedelta(days=dateNum))][c].transpose().reset_index(drop=True).iloc[:,0].tolist()
+    average_values = [round(X,2) for X in average_values]
+    
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x = x[::-1],
+                             y = measures[::-1],
+                             mode = 'markers', 
+                             marker = {"color":"#158bba", "size":10},
+                             name = country,
+                             text = actual_values[::-1]
+                             )
+                  )
+    fig.add_trace(go.Scatter(x = [0, 0, 0, 0, 0, 0, 0, 0],
+                             y = measures[::-1],
+                             mode = 'markers', 
+                             marker = {"color":"#8b8b8b", "size":10},
+                             name = name,
+                             text = average_values[::-1]
+                             )
+                  )
+    shapes=[dict(type='line', 
+                 x0 = x[i] if ((x[i]>0) | (x[i]<=0)) else 0, 
+                 y0 = measures[i], x1 = 0, y1 = measures[i],
+                 line = dict(color = 'grey', width = 3)
+                 ) for i in range(8)]
+    fig.update_layout(
+        hovermode="x",
+        plot_bgcolor='rgba(0,0,0,0)',
+        xaxis=dict(title="relative difference from average"),
+        shapes=shapes
+    )
+    fig.update_xaxes(showgrid=True, showline=True, gridcolor='lightgrey', gridwidth=2,
+                     zerolinewidth=3, zerolinecolor='indianred')
+    fig.update_yaxes(showgrid=False)
+    return fig
 
 #  -------------------------------------------------------------------------------------
 
