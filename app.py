@@ -59,6 +59,7 @@ sidebar = html.Div(
             dbc.NavLink("Main", href="/", active="exact"),
             dbc.NavLink("Dynamics", href="/dynamics", active="exact"),
             dbc.NavLink("Interventions", href="/interventions", active="exact"),
+            dbc.NavLink("Stringency", href="/stringency", active="exact"),
             dbc.NavLink("Global Context", href="/global-context", active="exact"),
             ],
             vertical=True,
@@ -160,7 +161,7 @@ def update_graph(country, measure, type, dateNum):
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=x,y=y,marker_color='#158bba'))
     fig.update_layout(
-    template="simple_white"
+        template="simple_white"
     )
     return fig
 
@@ -262,6 +263,46 @@ def update_graph(country, column, npi, dateNum):
 
 # -= Page 3 =-
 
+page_stringency = html.Div([
+    html.H1('Impact of Stringency',className="display-4",
+            style={'textAlign':'center'}),
+    html.Hr(),
+    dcc.Graph(id='graph-stringency', figure={})
+])
+
+@app.callback(
+    Output('graph-stringency', 'figure'),
+    Input('dropdown-country-1', 'value')
+)
+def update_graph(country):
+    # dataS = data[(data.CountryName==country)]
+    dataS = data
+    first_day = dataS[dataS.Average7 > 0].Date.min()
+    dataS = dataS[dataS.Date>=first_day]
+    # x = dataS["Date"]
+    # y = dataS["StringencyIndexForDisplay"]
+    #c = dataS[npi]
+    fig = px.scatter(dataS, x="StringencyIndexForDisplay", y="Average7", 
+               animation_frame=dataS["Date"].apply(lambda x: x.strftime("%Y-%m-%d")), animation_group="CountryName",
+               hover_name="CountryName",
+               # # size="pop", 
+               color="Continent_Name",
+                log_y=True, #size_max=55, 
+                range_x=[0,100], range_y=[0.01,dataS.Average7.max()]
+                )
+    fig.update_layout(
+        # bargap=0,
+        # legend=dict(orientation="h",yanchor="bottom",y=1.02,xanchor="right", x=1),
+        template="simple_white",
+        transition = {"duration": 0.01}
+    )
+    return fig
+
+
+#  -------------------------------------------------------------------------------------
+
+# -= Page 4 =-
+
 page_context = html.Div([
     html.H1('Global Context',className="display-4",
             style={'textAlign':'center'}),
@@ -283,6 +324,7 @@ app.validation_layout = html.Div([
     page_main,
     page_dynamics,
     page_interventions,
+    page_stringency,
     page_context
 ])
 
@@ -297,6 +339,8 @@ def render_page_content(pathname):
         return page_dynamics
     elif pathname == "/interventions":
         return page_interventions
+    elif pathname == "/stringency":
+        return page_stringency
     elif pathname == "/global-context":
         return page_context
     # If the user tries to reach a different page, return a 404 message
