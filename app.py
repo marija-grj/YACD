@@ -59,11 +59,11 @@ sidebar = html.Div(
         ),
         html.Hr(),
         dbc.Nav([
-            dbc.NavLink("Main", href="/", active="exact"),
+            dbc.NavLink("The project", href="/", active="exact"),
             dbc.NavLink("Dynamics", href="/dynamics", active="exact"),
             dbc.NavLink("Interventions", href="/interventions", active="exact"),
             dbc.NavLink("Stringency", href="/stringency", active="exact"),
-            dbc.NavLink("Global Context", href="/global-context", active="exact"),
+            dbc.NavLink("Global context", href="/global-context", active="exact"),
             ],
             vertical=True,
             pills=True,
@@ -82,7 +82,17 @@ page_main = html.Div([
     html.H1('The project',className="display-4",
             style={'textAlign':'center'}),
     html.Hr(),
-    html.P('About the project, authors and sources')
+    html.P('Although, world wide web is full of Covid-19 dashboards of various kinds, this interactive project views the data from a unique perspective. SARS-Cov-2 pandemic is a global issue, however, each country experiences it in an incomparable way. Therefore, YACD project focuses on journey—struggle and recovery—of a single nation at a time.'),
+    html.H5('Country'),
+    html.P('Select a country for your analysis in the navigation bar on the left.'),
+    html.H5('Dynamics'),
+    html.P(['Explore the basic pandemic dynamics metris by studying twelve graphs on the number of Covid-19 cases, deaths due to Covid-19, number of tests and vaccination.', html.Br(),'Trigger graph change by selecting two parameters: type of data and units of measurement.']),
+    html.H5('Interventions'),
+    html.P('Observe the variety, timing and effectiveness of government responses aiming to slow down the spread of pandemic. Select one of five the most commonly used governmental non-pharmaceutical interventions to see when it was implemented and if number cases went down for that period. Take into account that measures are the most effective when used together.'),
+    html.H5('Stringency'),
+    html.P('Stringency Index is a composite measure of nine of the response metrics and can vary from 0 (no measures) to 100 (the strictest measures). Discover how stringency index and Covid-19 case dynamics change over time in the animated graph.'),
+    html.H5('Global context'),
+    html.P('Learn about the main pandemic metrics for the selected country in relation to its continent or global averages.')
 ])
 
 #  -------------------------------------------------------------------------------------
@@ -93,6 +103,7 @@ page_dynamics = html.Div([
     html.H1('Covid-19 Dynamics',className="display-4",
             style={'textAlign':'center'}),
     html.Hr(),
+    html.H3(id='dynamics-header', style={'textAlign':'center'}),
     dbc.RadioItems(
         id="radio-data-row1",
         options=[
@@ -112,7 +123,7 @@ page_dynamics = html.Div([
         options=[
             {'label': 'Cumulative', 'value': 'Cumulative'},
             {'label': 'Daily', 'value': 'Daily'},
-            {'label': '14-day cumulative per 100K', 'value': 'BiweeklyNorm'},
+            {'label': '14-day Cumulative per 100K', 'value': 'BiweeklyNorm'},
         ],
         value='Daily',
         labelClassName="mr-4",
@@ -140,6 +151,18 @@ page_dynamics = html.Div([
         }
     )   
 ])
+
+@app.callback(
+    Output('dynamics-header', 'children'),
+    Input('radio-data-row1', 'value'),
+    Input('radio-data-row2', 'value'))
+def update_header(measure, type):
+    if type == 'BiweeklyNorm': 
+        type = "14-Day Cumulative"
+    if measure == 'Vaccine':
+        measure = "Vaccination"
+    header = type + " " + measure + " Over Time"
+    return header
 
 @app.callback(
     Output('graph-dynamics', 'figure'),
@@ -173,9 +196,10 @@ def update_graph(country, measure, type, dateNum):
 # -= Page 2 =-
 
 page_interventions = html.Div([
-    html.H1('Government Interventions ',className="display-4",
+    html.H1('Government interventions ',className="display-4",
             style={'textAlign':'center'}),
     html.Hr(),
+    html.H3(id='interventions-header', style={'textAlign':'center'}),
     dbc.RadioItems(
         id="radio-data-1",
         options=[
@@ -236,6 +260,17 @@ colors_npi = ['#8b8b8b','#beddf4','#7cbce9','#3b9ade','#1f77b4']
 colors_npi2 = ['#8b8b8b','#99caff','#4da3ff','#007bff','#0056b3']
 colors_npi3 = ['#8b8b8b','#75cdf0','#30b4e8','#158bba','#0f678a']
 
+@app.callback(
+    Output('interventions-header', 'children'),
+    Input('radio-data-1', 'value'),
+    Input('radio-npi-1', 'value'))
+def update_header(measure, npi):
+    n = {"C1_School closing": "School closing measure stringency", "C2_Workplace closing": "Workplace closing measure stringency", "C4_Restrictions on gatherings": "stringency of Restrictions on gatherings",
+         "C7_Restrictions on internal movement": "stringency of Internal movement control", "C8_International travel controls":"stringency of International travel controls"}
+    m = {'ConfirmedCases':'Total Cases', 'DailyCases':'Daily Cases',
+         'Average7':'7-day Average Cases', 'Average14':'14-day Average Cases'}
+    header = m[measure] + " over time by " + n[npi]
+    return header
 
 @app.callback(
     Output('graph-npi', 'figure'),
@@ -267,7 +302,7 @@ def update_graph(country, column, npi, dateNum):
 # -= Page 3 =-
 
 page_stringency = html.Div([
-    html.H1('Impact of Stringency',className="display-4",
+    html.H1('Impact of regulation stringency',className="display-4",
             style={'textAlign':'center'}),
     html.Hr(),
     dbc.Spinner(dcc.Graph(id='graph-stringency', figure={}))
@@ -304,7 +339,7 @@ def update_graph(country):
 # -= Page 4 =-
 
 page_context = html.Div([
-    html.H1('Global Context',className="display-4",
+    html.H1('Global context',className="display-4",
             style={'textAlign':'center'}),
     html.Hr(),
     html.H3(id='h3',children='Country metrics in relation to the world/continent average',style={'textAlign':'center'}),
@@ -422,7 +457,8 @@ def update_graph(country, area, dateNum):
     shapes=[dict(type='line', 
                  x0 = x[i] if ((x[i]>0) | (x[i]<=0)) else 0, 
                  y0 = measures[i], x1 = 0, y1 = measures[i],
-                 line = dict(color = 'grey', width = 3)
+                 line = dict(color = '#75cdf0', width = 3),
+                 layer='below'
                  ) for i in range(8)]
     fig.update_layout(
         hovermode="x",
@@ -430,6 +466,7 @@ def update_graph(country, area, dateNum):
         xaxis=dict(title="relative difference from average"),
         shapes=shapes
     )
+    
     fig.update_xaxes(showgrid=True, showline=True, gridcolor='lightgrey', gridwidth=2,
                      zerolinewidth=3, zerolinecolor='indianred')
     fig.update_yaxes(showgrid=False)
