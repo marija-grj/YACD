@@ -305,7 +305,7 @@ page_stringency = html.Div([
     html.H1('Impact of regulation stringency',className="display-4",
             style={'textAlign':'center'}),
     html.Hr(),
-    dbc.Spinner(dcc.Graph(id='graph-stringency', figure={}))
+    dcc.Loading(dcc.Graph(id='graph-stringency', figure={}))
 ])
 
 @app.callback(
@@ -330,7 +330,7 @@ def update_graph(country):
                 )
     fig.update_layout(
         template="simple_white",
-        transition = {"duration": 0.01}
+        transition = {"duration": 50}
     )
     return fig
 
