@@ -333,7 +333,6 @@ page_stringency = html.Div([
     html.H1('Government interventions', className="display-4", style={'textAlign':'center'}),
     html.Hr(),
     # dcc.Loading(dcc.Graph(id='graph-stringency', figure={}))
-    html.H3(dbc.Badge("September 16, 2021", color="primary", className="mr-1"), style={'textAlign':'center'}),
     dbc.Row([
         dbc.Col([
             html.H3("Gatherings"),
@@ -365,7 +364,36 @@ page_stringency = html.Div([
                      height=100),
             html.H5(id="internal-movement-status")
         ], style={'textAlign': 'center'}),
-    ])
+    ]),
+    html.H3(dbc.Badge(id="date-selection-2", color="primary", className="mr-1"), style={'textAlign':'center'}),
+    dcc.Slider(
+        id='date-slider-4',
+        min=numDate[0],
+        max=numDate[-1],
+        value=numDate[-7],
+        step=1,
+        marks={
+            0:"Jan 2020",
+            60:"Mar 2020",
+            121:"May 2020",
+            182:"Jul 2020",
+            244:"Sep 2020",
+            305:"Nov 2020",
+            366:"Jan 2021",
+            425:"Mar 2021",
+            486:"May 2021",
+            547:"Jul 2021",
+            609:"Sep 2021",
+            670:"Nov 2021",
+            731:"Jan 2022",
+            790:"Mar 2022",
+            851:"May 2022",
+            912:"Jul 2022",
+            974:"Sep 2022",
+            1035:"Nov 2022",
+            1096:"Jan 2023"
+        }
+    )
 ])
 
 @app.callback(
@@ -379,10 +407,11 @@ page_stringency = html.Div([
     Output('businesses-img', 'src'),
     Output('traveling-img', 'src'),
     Output('internal-movement-img', 'src'),
-    Input('dropdown-country-1', 'value')
+    Input('dropdown-country-1', 'value'),
+    Input('date-slider-4', 'value')
 )
-def update_status(country):
-    dataS = data[(data.CountryName==country) & (data.Date == "2021-09-16")]
+def update_status(country, dateNum):
+    dataS = data[(data.CountryName==country) & (data.Date == minDate+datetime.timedelta(days=dateNum))]
     image_link = "https://raw.githubusercontent.com/marija-grj/YACD/main/images/"
     
     gs = int(dataS["C4_Restrictions on gatherings"].values[0])
@@ -406,7 +435,14 @@ def update_status(country):
     ims_img = image_link + "internal_" + str(ims) + ".png"
     
     return gatherings_status, schools_status, businesses_status, traveling_status, internal_movement_status, gs_img, ss_img, bs_img, ts_img, ims_img
- 
+
+@app.callback(
+    Output('date-selection-2', 'children'),
+    Input('date-slider-4', 'value')
+)
+def display_date_selection(dateNum):
+    date = (minDate+datetime.timedelta(days=dateNum)).strftime("%B %d, %Y")
+    return date 
 # @app.callback(
 #     Output('graph-stringency', 'figure'),
 #     Input('dropdown-country-1', 'value')
@@ -454,7 +490,8 @@ page_context = html.Div([
         inputClassName="mr-2"
     ),
     dcc.Graph(id='graph-world', figure={}),
-    html.P(id='date-selection'),
+    html.H5(dbc.Badge(id='date-selection', color="primary", className="mr-1"), style={'textAlign':'center'}),
+    # html.P(id='date-selection'),
     dcc.Slider(
         id='date-slider-3',
         min=numDate[0],
