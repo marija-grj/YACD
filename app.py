@@ -278,6 +278,12 @@ dict_npi = {"C1_School closing":["No restrictions","Recommend closing","Require 
             "C7_Restrictions on internal movement":["No restrictions","Recommendations","Restrictions"],
             "C8_International travel controls":["No restrictions","Screening arrivals","Quarantine arrivals","Ban arrivals from some regions","Total border closure"]
             } 
+dict_col = {"C1_School closing":["#B4C1D4","#E1D053","#DD8033","#BE1C1A"],
+            "C2_Workplace closing":["#B4C1D4","#E1D053","#DD8033","#BE1C1A"],
+            "C4_Restrictions on gatherings":["#B4C1D4","#E1D053","#E8B14C","#DD8033","#BE1C1A"],
+            "C7_Restrictions on internal movement":["#B4C1D4","#E1D053","#BE1C1A"],
+            "C8_International travel controls":["#B4C1D4","#E1D053","#E8B14C","#DD8033","#BE1C1A"]
+            } 
 colors_npi = ['#8b8b8b','#beddf4','#7cbce9','#3b9ade','#1f77b4']
 colors_npi2 = ['#8b8b8b','#99caff','#4da3ff','#007bff','#0056b3']
 colors_npi3 = ['#8b8b8b','#75cdf0','#30b4e8','#158bba','#0f678a']
@@ -311,7 +317,7 @@ def update_graph(country, column, npi, dateNum):
     c = dataS[npi]
     fig = go.Figure()
     for i in range(len(dict_npi[npi])):
-        fig.add_trace(go.Bar(x=x[c==i], y=y[c==i], name=dict_npi[npi][i], marker_color=colors_npi3[i]))
+        fig.add_trace(go.Bar(x=x[c==i], y=y[c==i], name=dict_npi[npi][i], marker_color=dict_col[npi][i]))
     fig.update_layout(
         bargap=0,
         legend=dict(orientation="h", yanchor="bottom", y=1.02,xanchor="right", x=1),
@@ -324,37 +330,108 @@ def update_graph(country, column, npi, dateNum):
 # -= Page 3 =-
 
 page_stringency = html.Div([
-    html.H1('Impact of regulation stringency',className="display-4",
-            style={'textAlign':'center'}),
+    html.H1('Government interventions', className="display-4", style={'textAlign':'center'}),
     html.Hr(),
-    dcc.Loading(dcc.Graph(id='graph-stringency', figure={}))
+    # dcc.Loading(dcc.Graph(id='graph-stringency', figure={}))
+    html.H3(dbc.Badge("September 16, 2021", color="primary", className="mr-1"), style={'textAlign':'center'}),
+    dbc.Row([
+        dbc.Col([
+            html.H3("Gatherings"),
+            html.Img(id='gatherings-img',
+                     height=100),
+            html.H5(id="gatherings-status")
+        ], style={'textAlign': 'center'}),
+        dbc.Col([
+            html.H3("Schools"),
+            html.Img(id='schools-img',
+                     height=100),
+            html.H5(id="schools-status")
+        ], style={'textAlign': 'center'}),
+        dbc.Col([
+            html.H3("Businesses"),
+            html.Img(id='businesses-img',
+                     height=100),
+            html.H5(id="businesses-status")
+        ], style={'textAlign': 'center'}),
+        dbc.Col([
+            html.H3("Traveling"),
+            html.Img(id='traveling-img',
+                     height=100),
+            html.H5(id="traveling-status")
+        ], style={'textAlign': 'center'}),
+        dbc.Col([
+            html.H3("Internal movement"),
+            html.Img(id='internal-movement-img',
+                     height=100),
+            html.H5(id="internal-movement-status")
+        ], style={'textAlign': 'center'}),
+    ])
 ])
 
 @app.callback(
-    Output('graph-stringency', 'figure'),
+    Output('gatherings-status', 'children'),
+    Output('schools-status', 'children'),
+    Output('businesses-status', 'children'),
+    Output('traveling-status', 'children'),
+    Output('internal-movement-status', 'children'),
+    Output('gatherings-img', 'src'),
+    Output('schools-img', 'src'),
+    Output('businesses-img', 'src'),
+    Output('traveling-img', 'src'),
+    Output('internal-movement-img', 'src'),
     Input('dropdown-country-1', 'value')
 )
-def update_graph(country):
-    dataS = data[["Date","CountryName","StringencyIndexForDisplay","Average7","Continent_Name"]].copy()
-    first_day = dataS[dataS.Average7 > 0].Date.min()
-    dataS = dataS[dataS.Date>=first_day]
-    dataS.loc[:,"Date"] = dataS["Date"].apply(lambda x: x.strftime("%Y-%m-%d"))
+def update_status(country):
+    dataS = data[(data.CountryName==country) & (data.Date == "2021-09-16")]
+    image_link = "https://raw.githubusercontent.com/marija-grj/YACD/main/images/"
     
-    fig = px.scatter(dataS, x="StringencyIndexForDisplay", y="Average7", 
-                animation_frame="Date", animation_group="CountryName",
-                hover_name="CountryName",
-                color="Continent_Name",
-                log_y=True, size_max=20,
-                range_x=[0,100], range_y=[0.01,dataS.Average7.max()],
-                labels={"Average7":"7-day-average cases",
-                        "StringencyIndexForDisplay":"Stringency Index",
-                        "Continent_Name":"Continent"}
-                )
-    fig.update_layout(
-        template="simple_white",
-        transition = {"duration": 50}
-    )
-    return fig
+    gs = int(dataS["C4_Restrictions on gatherings"].values[0])
+    gatherings_status = dict_npi["C4_Restrictions on gatherings"][gs]
+    gs_img = image_link + "gatherings_" + str(gs) + ".png"
+    
+    ss = int(dataS["C1_School closing"].values[0])
+    schools_status = dict_npi["C1_School closing"][ss]
+    ss_img = image_link + "school_" + str(ss) + ".png"
+    
+    bs = int(dataS["C2_Workplace closing"].values[0])
+    businesses_status = dict_npi["C2_Workplace closing"][bs]
+    bs_img = image_link + "business_" + str(bs) + ".png"
+    
+    ts = int(dataS["C8_International travel controls"].values[0])
+    traveling_status = dict_npi["C8_International travel controls"][ts]
+    ts_img = image_link + "travel_" + str(ts) + ".png"
+    
+    ims = int(dataS["C7_Restrictions on internal movement"].values[0])
+    internal_movement_status = dict_npi["C7_Restrictions on internal movement"][ims]
+    ims_img = image_link + "internal_" + str(ims) + ".png"
+    
+    return gatherings_status, schools_status, businesses_status, traveling_status, internal_movement_status, gs_img, ss_img, bs_img, ts_img, ims_img
+ 
+# @app.callback(
+#     Output('graph-stringency', 'figure'),
+#     Input('dropdown-country-1', 'value')
+# )
+# def update_graph(country):
+#     dataS = data[["Date","CountryName","StringencyIndexForDisplay","Average7","Continent_Name"]].copy()
+#     first_day = dataS[dataS.Average7 > 0].Date.min()
+#     dataS = dataS[dataS.Date>=first_day]
+#     dataS.loc[:,"Date"] = dataS["Date"].apply(lambda x: x.strftime("%Y-%m-%d"))
+    
+#     fig = px.scatter(dataS, x="StringencyIndexForDisplay", y="Average7", 
+#                 animation_frame="Date", animation_group="CountryName",
+#                 hover_name="CountryName",
+#                 color="Continent_Name",
+#                 log_y=True, size_max=20,
+#                 range_x=[0,100], range_y=[0.01,dataS.Average7.max()],
+#                 labels={"Average7":"7-day-average cases",
+#                         "StringencyIndexForDisplay":"Stringency Index",
+#                         "Continent_Name":"Continent"}
+#                 )
+#     fig.update_layout(
+#         template="simple_white",
+#         transition = {"duration": 50}
+#     )
+#     return fig
 
 #  -------------------------------------------------------------------------------------
 
