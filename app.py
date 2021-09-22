@@ -313,7 +313,7 @@ page_stringency = html.Div([
     Input('dropdown-country-1', 'value')
 )
 def update_graph(country):
-    dataS = data.copy()
+    dataS = data[["Date","CountryName","StringencyIndexForDisplay","Average7","Continent_Name"]].copy()
     first_day = dataS[dataS.Average7 > 0].Date.min()
     dataS = dataS[dataS.Date>=first_day]
     dataS.loc[:,"Date"] = dataS["Date"].apply(lambda x: x.strftime("%Y-%m-%d"))
