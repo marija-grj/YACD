@@ -430,25 +430,45 @@ def update_status(country, dateNum):
     dataS = data[(data.CountryName==country) & (data.Date == minDate+datetime.timedelta(days=dateNum))]
     image_link = "https://raw.githubusercontent.com/marija-grj/YACD/main/images/"
     
-    gs = int(dataS["C4_Restrictions on gatherings"].values[0])
-    gatherings_status = dict_npi["C4_Restrictions on gatherings"][gs]
-    gs_img = image_link + "gatherings_" + str(gs) + ".png"
+    gs = dataS["C4_Restrictions on gatherings"].values[0]
+    if gs >= 0:
+        gatherings_status = dict_npi["C4_Restrictions on gatherings"][int(gs)]
+        gs_img = image_link + "gatherings_" + str(int(gs)) + ".png"
+    else:
+        gatherings_status = "No data"
+        gs_img = image_link + "na.png"
     
-    ss = int(dataS["C1_School closing"].values[0])
-    schools_status = dict_npi["C1_School closing"][ss]
-    ss_img = image_link + "school_" + str(ss) + ".png"
+    ss = dataS["C1_School closing"].values[0]
+    if ss >= 0:
+        schools_status = dict_npi["C1_School closing"][int(ss)]
+        ss_img = image_link + "school_" + str(int(ss)) + ".png"
+    else:
+        schools_status = "No data"
+        ss_img = image_link + "na.png"
     
-    bs = int(dataS["C2_Workplace closing"].values[0])
-    businesses_status = dict_npi["C2_Workplace closing"][bs]
-    bs_img = image_link + "business_" + str(bs) + ".png"
+    bs = dataS["C2_Workplace closing"].values[0]
+    if bs >= 0:
+        businesses_status = dict_npi["C2_Workplace closing"][int(bs)]
+        bs_img = image_link + "business_" + str(int(bs)) + ".png"
+    else:
+        businesses_status = "No data"
+        bs_img = image_link + "na.png"
+        
+    ts = dataS["C8_International travel controls"].values[0]
+    if ts >= 0:
+        traveling_status = dict_npi["C8_International travel controls"][int(ts)]
+        ts_img = image_link + "travel_" + str(int(ts)) + ".png"
+    else:
+        traveling_status = "No data"
+        ts_img = image_link + "na.png"
     
-    ts = int(dataS["C8_International travel controls"].values[0])
-    traveling_status = dict_npi["C8_International travel controls"][ts]
-    ts_img = image_link + "travel_" + str(ts) + ".png"
-    
-    ims = int(dataS["C7_Restrictions on internal movement"].values[0])
-    internal_movement_status = dict_npi["C7_Restrictions on internal movement"][ims]
-    ims_img = image_link + "internal_" + str(ims) + ".png"
+    ims = dataS["C7_Restrictions on internal movement"].values[0]
+    if ims >= 0:
+        internal_movement_status = dict_npi["C7_Restrictions on internal movement"][int(ims)]
+        ims_img = image_link + "internal_" + str(int(ims)) + ".png"
+    else:
+        internal_movement_status = "No data"
+        ims_img = image_link + "na.png"
     
     return gatherings_status, schools_status, businesses_status, traveling_status, internal_movement_status, gs_img, ss_img, bs_img, ts_img, ims_img
 
