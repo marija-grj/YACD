@@ -391,10 +391,11 @@ def update_figure(country, npi, dateNum):
     x = dataS["Date"]
     y = dataS["BiweeklyNormCases"]
     c = dataS[npi]
+    d = minDate+datetime.timedelta(days=dateNum)
     
     plt.style.use('fivethirtyeight')
     plt.figure(figsize = (20,6))
-    plt.axvline(x=minDate+datetime.timedelta(days=dateNum), color='grey', zorder=2, alpha=0.5)
+    plt.plot(d, y.iloc[dateNum]+y.max()/30, marker='v', markersize=15, color="#158CBA")
     for i in range(len(dict_npi[npi])):
         plt.fill_between(x,0,y,where=c==i, alpha=1, label=dict_npi[npi][i], color=dict_col[npi][i], lw=4, zorder=1)
     plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
