@@ -320,34 +320,34 @@ page_stringency = html.Div([
     # dcc.Loading(dcc.Graph(id='graph-stringency', figure={}))
     dbc.Row([
         dbc.Col([
-            html.H3("Gatherings"),
+            html.H4("Gatherings"),
             html.Img(id='gatherings-img',
                      height=80),
-            html.H5(id="gatherings-status")
+            dbc.Tooltip(id="gatherings-status", target='gatherings-img', placement='bottom'),
         ], style={'textAlign': 'center'}),
         dbc.Col([
-            html.H3("Schools"),
+            html.H4("Schools"),
             html.Img(id='schools-img',
                      height=80),
-            html.H5(id="schools-status")
+            dbc.Tooltip(id="schools-status", target='schools-img', placement='bottom'),
         ], style={'textAlign': 'center'}),
         dbc.Col([
-            html.H3("Businesses"),
+            html.H4("Businesses"),
             html.Img(id='businesses-img',
                      height=80),
-            html.H5(id="businesses-status")
+            dbc.Tooltip(id="businesses-status", target='businesses-img', placement='bottom'),
         ], style={'textAlign': 'center'}),
         dbc.Col([
-            html.H3("Internal movement"),
+            html.H4("Internal movement"),
             html.Img(id='internal-movement-img',
                      height=80),
-            html.H5(id="internal-movement-status")
+            dbc.Tooltip(id="internal-movement-status", target='internal-movement-img', placement='bottom'),
         ], style={'textAlign': 'center'}),
         dbc.Col([
-            html.H3("Traveling"),
+            html.H4("Traveling"),
             html.Img(id='traveling-img',
                      height=80),
-            html.H5(id="traveling-status")
+            dbc.Tooltip(id="traveling-status", target='traveling-img', placement='bottom'),
         ], style={'textAlign': 'center'}),
     ]),
     html.Hr(),
