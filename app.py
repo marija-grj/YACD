@@ -87,7 +87,7 @@ sidebar = html.Div(
             dbc.NavLink("The project", href="/", active="exact"),
             dbc.NavLink("Dynamics", href="/dynamics", active="exact"),
             dbc.NavLink("Interventions", href="/interventions", active="exact"),
-            dbc.NavLink("Stringency", href="/stringency", active="exact"),
+            dbc.NavLink("Interventions 2", href="/interventions2", active="exact"),
             dbc.NavLink("Global context", href="/global-context", active="exact"),
             ],
             vertical=True,
@@ -114,8 +114,8 @@ page_main = html.Div([
     html.P(['Explore the basic pandemic dynamics metris by studying twelve graphs on the number of Covid-19 cases, deaths due to Covid-19, number of tests and vaccination.', html.Br(),'Trigger graph change by selecting two parameters: type of data and units of measurement.']),
     html.H5('Interventions'),
     html.P('Observe the variety, timing and effectiveness of government responses aiming to slow down the spread of pandemic. Select one of five the most commonly used governmental non-pharmaceutical interventions to see when it was implemented and if number cases went down for that period. Take into account that measures are the most effective when used together.'),
-    html.H5('Stringency'),
-    html.P('Stringency Index is a composite measure of nine of the response metrics and can vary from 0 (no measures) to 100 (the strictest measures). Discover how stringency index and Covid-19 case dynamics change over time in the animated graph.'),
+    # html.H5('Stringency'),
+    # html.P('Stringency Index is a composite measure of nine of the response metrics and can vary from 0 (no measures) to 100 (the strictest measures). Discover how stringency index and Covid-19 case dynamics change over time in the animated graph.'),
     html.H5('Global context'),
     html.P('Learn about the main pandemic metrics for the selected country in relation to its continent or global averages.')
 ])
@@ -314,7 +314,7 @@ def update_graph(country, column, npi, dateNum):
 
 # -= Page 3 =-
 
-page_stringency = html.Div([
+page_interventions2 = html.Div([
     html.H1('Government interventions', className="display-4", style={'textAlign':'center'}),
     html.Hr(),
     # dcc.Loading(dcc.Graph(id='graph-stringency', figure={}))
@@ -672,7 +672,7 @@ app.validation_layout = html.Div([
     page_main,
     page_dynamics,
     page_interventions,
-    page_stringency,
+    page_interventions2,
     page_context
 ])
 
@@ -687,8 +687,8 @@ def render_page_content(pathname):
         return page_dynamics
     elif pathname == "/interventions":
         return page_interventions
-    elif pathname == "/stringency":
-        return page_stringency
+    elif pathname == "/interventions2":
+        return page_interventions2
     elif pathname == "/global-context":
         return page_context
     # If the user tries to reach a different page, return a 404 message
