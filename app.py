@@ -7,6 +7,10 @@ import plotly.graph_objects as go
 import dash_bootstrap_components as dbc
 import pandas as pd
 import datetime
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+import io
+import base64
 
 data = pd.read_csv("https://raw.githubusercontent.com/marija-grj/YACD/main/data/OxCGRT_latest.csv",dtype={'CountryCode':'string'})
 data.loc[:,'Date'] = pd.to_datetime(data.Date, format='%Y-%m-%d')
@@ -16,6 +20,27 @@ summary.loc[:,'Date'] = pd.to_datetime(summary.Date, format='%Y-%m-%d')
 
 minDate = data.Date.min()
 numDate = [x for x in range(len(data.Date.unique()))] # Transform every unique date to a number
+marks={
+    0:"Jan 2020",
+    60:"Mar 2020",
+    121:"May 2020",
+    182:"Jul 2020",
+    244:"Sep 2020",
+    305:"Nov 2020",
+    366:"Jan 2021",
+    425:"Mar 2021",
+    486:"May 2021",
+    547:"Jul 2021",
+    609:"Sep 2021",
+    670:"Nov 2021",
+    731:"Jan 2022",
+    790:"Mar 2022",
+    851:"May 2022",
+    912:"Jul 2022",
+    974:"Sep 2022",
+    1035:"Nov 2022",
+    1096:"Jan 2023"
+}
 
 #  -------------------------------------------------------------------------------------
 
@@ -139,27 +164,7 @@ page_dynamics = html.Div([
         value=[numDate[0], numDate[-1]],
         step=1,
         allowCross=False,
-        marks={
-            0:"Jan 2020",
-            60:"Mar 2020",
-            121:"May 2020",
-            182:"Jul 2020",
-            244:"Sep 2020",
-            305:"Nov 2020",
-            366:"Jan 2021",
-            425:"Mar 2021",
-            486:"May 2021",
-            547:"Jul 2021",
-            609:"Sep 2021",
-            670:"Nov 2021",
-            731:"Jan 2022",
-            790:"Mar 2022",
-            851:"May 2022",
-            912:"Jul 2022",
-            974:"Sep 2022",
-            1035:"Nov 2022",
-            1096:"Jan 2023"
-        }
+        marks=marks
     )   
 ])
 
@@ -248,27 +253,7 @@ page_interventions = html.Div([
         value=[numDate[0], numDate[-1]],
         step=1,
         allowCross=False,
-        marks={
-            0:"Jan 2020",
-            60:"Mar 2020",
-            121:"May 2020",
-            182:"Jul 2020",
-            244:"Sep 2020",
-            305:"Nov 2020",
-            366:"Jan 2021",
-            425:"Mar 2021",
-            486:"May 2021",
-            547:"Jul 2021",
-            609:"Sep 2021",
-            670:"Nov 2021",
-            731:"Jan 2022",
-            790:"Mar 2022",
-            851:"May 2022",
-            912:"Jul 2022",
-            974:"Sep 2022",
-            1035:"Nov 2022",
-            1096:"Jan 2023"
-        }
+        marks=marks
     )      
 ])
 
@@ -337,64 +322,95 @@ page_stringency = html.Div([
         dbc.Col([
             html.H3("Gatherings"),
             html.Img(id='gatherings-img',
-                     height=100),
+                     height=80),
             html.H5(id="gatherings-status")
         ], style={'textAlign': 'center'}),
         dbc.Col([
             html.H3("Schools"),
             html.Img(id='schools-img',
-                     height=100),
+                     height=80),
             html.H5(id="schools-status")
         ], style={'textAlign': 'center'}),
         dbc.Col([
             html.H3("Businesses"),
             html.Img(id='businesses-img',
-                     height=100),
+                     height=80),
             html.H5(id="businesses-status")
-        ], style={'textAlign': 'center'}),
-        dbc.Col([
-            html.H3("Traveling"),
-            html.Img(id='traveling-img',
-                     height=100),
-            html.H5(id="traveling-status")
         ], style={'textAlign': 'center'}),
         dbc.Col([
             html.H3("Internal movement"),
             html.Img(id='internal-movement-img',
-                     height=100),
+                     height=80),
             html.H5(id="internal-movement-status")
         ], style={'textAlign': 'center'}),
+        dbc.Col([
+            html.H3("Traveling"),
+            html.Img(id='traveling-img',
+                     height=80),
+            html.H5(id="traveling-status")
+        ], style={'textAlign': 'center'}),
     ]),
-    html.H3(dbc.Badge(id="date-selection-2", color="primary", className="mr-1"), style={'textAlign':'center'}),
+    html.Hr(),
+    html.H5(dbc.Badge(id="date-selection-2", color="primary", className="mr-1"), style={'textAlign':'center'}),
     dcc.Slider(
         id='date-slider-4',
         min=numDate[0],
         max=numDate[-1],
         value=numDate[-7],
         step=1,
-        marks={
-            0:"Jan 2020",
-            60:"Mar 2020",
-            121:"May 2020",
-            182:"Jul 2020",
-            244:"Sep 2020",
-            305:"Nov 2020",
-            366:"Jan 2021",
-            425:"Mar 2021",
-            486:"May 2021",
-            547:"Jul 2021",
-            609:"Sep 2021",
-            670:"Nov 2021",
-            731:"Jan 2022",
-            790:"Mar 2022",
-            851:"May 2022",
-            912:"Jul 2022",
-            974:"Sep 2022",
-            1035:"Nov 2022",
-            1096:"Jan 2023"
-        }
-    )
+        marks=marks
+    ),
+    html.Hr(),
+    dbc.RadioItems(
+        id="radio-npi-2",
+        options=[
+            {'label': 'Gatherings', 'value': 'C4_Restrictions on gatherings'},
+            {'label': 'School closing', 'value': 'C1_School closing'},
+            {'label': 'Workplace closing', 'value': 'C2_Workplace closing'},
+            {'label': 'Internal movement', 'value': 'C7_Restrictions on internal movement'},
+            {'label': 'International travel', 'value': 'C8_International travel controls'}
+        ],
+        value='C4_Restrictions on gatherings',
+        labelClassName="mr-4",
+        className="text-center lead",
+        inline=True,
+        inputClassName="mr-2"
+    ),
+    # dcc.Graph(id='graph-npi-2', figure={})
+    html.Img(id='plt-graph', width='100%')
 ])
+
+@app.callback(
+    Output('plt-graph', 'src'),
+    Input('dropdown-country-1', 'value'),
+    Input('radio-npi-2','value'),
+    Input('date-slider-4', 'value')
+)
+def update_figure(country, npi, dateNum):
+    dataS = data[(data.CountryName==country)]
+    x = dataS["Date"]
+    y = dataS["BiweeklyNormCases"]
+    c = dataS[npi]
+    
+    plt.style.use('fivethirtyeight')
+    plt.figure(figsize = (20,6))
+    plt.axvline(x=minDate+datetime.timedelta(days=dateNum), color='grey', zorder=2, alpha=0.5)
+    for i in range(len(dict_npi[npi])):
+        plt.fill_between(x,0,y,where=c==i, alpha=1, label=dict_npi[npi][i], color=dict_col[npi][i], lw=4, zorder=1)
+    plt.gca().xaxis.set_major_formatter(mdates.DateFormatter('%Y'))
+    plt.gca().xaxis.set_minor_formatter(mdates.DateFormatter('%b'))
+    plt.gca().xaxis.set_major_locator(mdates.YearLocator())
+    plt.gca().xaxis.set_minor_locator(mdates.MonthLocator())
+    plt.grid(True, which='minor')
+    plt.title("14-Day Cumulative Cases per 100K of population")
+    # plt.legend(loc='upper center', bbox_to_anchor=(0.5, 1.3), ncol=5)
+    plt.legend(loc='upper left')
+    
+    buf = io.BytesIO() # in-memory files
+    plt.savefig(buf, format = "png") # save to the above file object
+    encoded = base64.b64encode(buf.getbuffer()).decode("utf8") # encode to html elements
+    plt.close()
+    return "data:image/png;base64,{}".format(encoded)
 
 @app.callback(
     Output('gatherings-status', 'children'),
@@ -443,6 +459,28 @@ def update_status(country, dateNum):
 def display_date_selection(dateNum):
     date = (minDate+datetime.timedelta(days=dateNum)).strftime("%B %d, %Y")
     return date 
+
+# @app.callback(
+#     Output('graph-npi-2', 'figure'),
+#     Input('dropdown-country-1', 'value'),
+#     Input('radio-npi-2','value'),
+# )
+# def update_graph(country, npi):
+#     dataS = data[(data.CountryName==country)]
+#     x = dataS["Date"]
+#     y = dataS["Average14"]
+#     c = dataS[npi]
+#     fig = go.Figure()
+#     for i in range(len(dict_npi[npi])):
+#         fig.add_trace(go.Bar(x=x[c==i], y=y[c==i], name=dict_npi[npi][i], marker_color=dict_col[npi][i]))
+#     fig.update_layout(
+#         bargap=0,
+#         legend=dict(orientation="h", yanchor="bottom", y=1.02,xanchor="right", x=1),
+#         template="simple_white"
+#     )
+#     return fig
+
+#------------------------------
 # @app.callback(
 #     Output('graph-stringency', 'figure'),
 #     Input('dropdown-country-1', 'value')
@@ -498,27 +536,7 @@ page_context = html.Div([
         max=numDate[-1],
         value=numDate[-3],
         step=1,
-        marks={
-            0:"Jan 2020",
-            60:"Mar 2020",
-            121:"May 2020",
-            182:"Jul 2020",
-            244:"Sep 2020",
-            305:"Nov 2020",
-            366:"Jan 2021",
-            425:"Mar 2021",
-            486:"May 2021",
-            547:"Jul 2021",
-            609:"Sep 2021",
-            670:"Nov 2021",
-            731:"Jan 2022",
-            790:"Mar 2022",
-            851:"May 2022",
-            912:"Jul 2022",
-            974:"Sep 2022",
-            1035:"Nov 2022",
-            1096:"Jan 2023"
-        }
+        marks=marks
     ) 
 ])
 
