@@ -9,5 +9,3 @@ dash_bootstrap_components
 pandas
 datetime
 matplotlib
-io
-base64
