@@ -79,7 +79,7 @@ sidebar = html.Div(
             "Select a country", className="lead"
         ),
         dcc.Dropdown(
-            id='dropdown-country-1', multi=False, value='Portugal',
+            id='dropdown-country-1', multi=False, value='Latvia',
             options=[{'label':x, 'value':x} for x in sorted(data.CountryName.unique())]
         ),
         html.Hr(),
